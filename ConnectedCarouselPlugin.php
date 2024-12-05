@@ -2,164 +2,90 @@
 
 class ConnectedCarouselPlugin extends Omeka_Plugin_AbstractPlugin
 {
-    protected $_hooks = array(
-		'public_head',
-		'exhibit_builder_page_head');
-
-    protected $_filters = array(
+    protected $_hooks = [
+        'public_head',
+        'exhibit_builder_page_head'
+    ];
+    protected $_filters = [
         'exhibit_layouts'
-    );
+    ];
 
     public function setUp()
     {
-        add_shortcode('concarousel', array('ConnectedCarouselPlugin', 'carousel'));
+        add_shortcode('concarousel', [self::class, 'carousel']);
         parent::setUp();
     }
 
     public function hookPublicHead($args)
     {
-        /**queue_css_file('jcarousel.connected-carousels');
-        queue_css_file('carousel');
-        queue_js_file('jcarousel.responsive');
-        queue_js_file('jquery.jcarousel.min');
-		**/
-		queue_css_file('slick');
-		queue_js_file('slick');
-		queue_css_file('jquery.fancybox');
-		queue_css_file('jquery.fancybox-buttons');
-		queue_js_file('jquery.fancybox');?>
-		<script type="text/javascript">
-			jQuery(document).ready(function(){
-
-				jQuery("a.iframe").fancybox({
-			             'type': 'iframe'
-				});
-				});
-		</script>
-	<?php	
+        $this->enqueueAssets();
     }
 
     public function hookExhibitBuilderPageHead($args)
     {
-           	queue_css_file('slick');
-			queue_js_file('slick');
-			queue_css_file('jquery.fancybox');
-			queue_css_file('jquery.fancybox-buttons');
-			queue_js_file('jquery.fancybox'); 
+        $this->enqueueAssets();
     }
 
     public function filterExhibitLayouts($layouts)
     {
-        $layouts['concarousel'] = array(
+        $layouts['concarousel'] = [
             'name' => __('Connected Carousel'),
-            'description' => __('Select images ids to display in a carousel')
-        );
+            'description' => __('Select image IDs to display in a carousel')
+        ];
         return $layouts;
     }
 
-    /**
-     * Build HTML for the carousel
-     * @param array $args
-     * @param Zend_View $view
-     * @return string HTML to display
-     */
     public static function carousel($args, $view)
     {
         static $id_suffix = 0;
-        if (isset($args['float'])) {
-            $params['float'] = $args['float'];
-        }else{
-			$params['float'] = 'left';
-		}
 
-        if (isset($args['width'])) {
-            $params['width'] = $args['width'];
-        }else{
-			$params['width'] = '100%';
-		}
+        $params = [
+            'float' => $args['float'] ?? 'left',
+            'width' => $args['width'] ?? '100%',
+            'noNav' => $args['navbar'] ?? 'true',
+            'range' => $args['ids'] ?? '',
+            'captionLocation' => $args['captionposition'] ?? 'left',
+            'showDescr' => $args['showdescription'] ?? 'false',
+            'hasImage' => 1
+        ];
 
-        if (isset($args['navbar'])) {
-            $params['noNav'] = $args['navbar'];
-        }else{
-			$params['noNav'] = 'true';
-		}
-		
-        if (isset($args['ids'])) {
-            $params['range'] = $args['ids'];
-        }
+        $ids = self::parseIds($params['range']);
+        $items = array_filter(array_map(fn($id) => get_record_by_id('item', $id), $ids));
 
-        if (isset($args['captionposition'])) {
-            $params['captionLocation'] = $args['captionposition'];
-        }else{
-	 		$params['captionLocation'] = 'left';
-		}
-		
-		if (isset($args['showdescription'])) {
-            $params['showDescr'] = $args['showdescription'];
-        }else{
-	 		$params['showDescr'] = 'false';
-		}
-		
-		$params['hasImage'] = 1;
-		$result = preg_replace_callback('/(\d+)-(\d+)/', function($m) {
-		    return implode(',', range($m[1], $m[2]));
-		}, $args['ids']);
-		$ids = explode(',',$result);
-		foreach ($ids as $key => $item){
-			if (get_record_by_id('item',$item)):
-        		$items[$key] = get_record_by_id('item', $item);
-			endif;
-		};
-       //handle the configs for Slick
-        //$configs = array('slick' => array());
+        $configs = [
+            'slidesToShow' => $args['slides'] ?? 5,
+            'slidesToScroll' => $args['scroll'] ?? 1,
+            'centerMode' => $args['center'] ?? 'false',
+            'autoPlay' => $args['slideshow'] ?? 'false',
+            'autoplaySpeed' => is_numeric($args['speed'] ?? null) ? (int) $args['speed'] : 2000,
+            'focusOnSelect' => $args['focus'] ?? 'true',
+            'arrows' => $args['navigation'] ?? 'false'
+        ];
 
-        //carousel configs
-        if (isset($args['slides'])) {
-            $configs['slidesToShow'] = $args['slides'];
-		}else{
-			$configs['slidesToShow'] = 5;
-        }
-        if (isset($args['scroll'])) {
-            $configs['slidesToScroll'] = $args['scroll'];
-		}else{
-			$configs['slidesToScroll'] = 1;
-        }
+        $html = $view->partial('carousel.php', [
+            'items' => $items,
+            'id_suffix' => $id_suffix,
+            'params' => $params,
+            'configs' => $configs
+        ]);
 
-        if (isset($args['center'])) {
-            $configs['centerMode'] = $args['center'];
-		}else{
-			$configs['centerMode'] = 'false';
-        }
-
-        if (isset($args['slideshow'])) {
-            $configs['autoPlay'] = $args['slideshow'];
-		}else{
-			$configs['autoPlay'] = 'false';
-        }
-
-        if(isset($args['speed'])) {
-            if(is_numeric($args['speed'])) {
-                $configs['autoplaySpeed'] = (int) $args['speed'];
-            } else {
-                $configs['autoplaySpeed'] = $args['speed'];
-            }
-        }else{
-			$configs['autoplaySpeed'] = 2000;
-		}
-        if(isset($args['focus'])){
-            $configs['focusOnSelect'] = $args['focus'];
-		}else{
-			$configs['focusOnSelect'] = 'true';
-        }
-
-        if (isset($args['navigation'])){
-            $configs['arrows'] = $args['navigation'];
-		}else{
-			$configs['arrows'] = 'false';
-        }
-
-        $html = $view->partial('carousel.php', array('items' => $items, 'id_suffix' => $id_suffix, 'params' => $params, 'configs' => $configs));
         $id_suffix++;
         return $html;
+    }
+
+    private function enqueueAssets(): void
+    {
+        queue_js_file('slick');
+        queue_css_file('slick');
+
+        queue_js_file('jquery.fancybox');
+        queue_css_file('jquery.fancybox');
+        queue_css_file('jquery.fancybox-buttons');
+    }
+
+    private static function parseIds($range)
+    {
+        $expanded = preg_replace_callback('/(\d+)-(\d+)/', fn($m) => implode(',', range($m[1], $m[2])), $range);
+        return array_filter(explode(',', $expanded), 'is_numeric');
     }
 }
