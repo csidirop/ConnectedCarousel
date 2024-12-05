@@ -14,7 +14,7 @@ $width = isset($params['width'])
 $Nav = isset($params['noNav'])
 	? html_escape($params['noNav'])
 	: 'true';
-if ($Nav == 'true' || $configs['autoPlay'] == 'true'){
+if ($configs['autoPlay'] == 'true'){
 	$shoArrows = 'false';
 }else{
 	$shoArrows = 'true'; 
@@ -31,8 +31,8 @@ if ($width != '100%'){
 };
 ?>
 
-<div style="max-width:100%; max-height:100%; width:<?php echo $width;?>; float:<?php echo $float;?>; ">
-	<div class="carousel-navigation<?php echo $id_suffix;?>" style="max-width:100%; max-height:100%; width:<?php echo $tempwidth;?>; display:<?php echo $setPos;?>">
+<div>
+	<div class="carousel-navigation<?php echo $id_suffix;?>" >
 		<?php foreach($items as $item): 
 			set_current_record('Item', $item);
 			if (metadata($item,'has files'))
@@ -47,7 +47,7 @@ if ($width != '100%'){
 		<?php endforeach; ?>
 	</div>		
 
-	<div class="carousel-stage<?php echo $id_suffix;?>" style="max-width:100%; max-height:100%; width:<?php echo $tempwidth;?>;" >
+	<div class="carousel-stage<?php echo $id_suffix;?>" >
 		<?php foreach($items as $item):
 			set_current_record('Item', $item);
 			if (metadata($item,'has files'))

@@ -18,25 +18,11 @@ class ConnectedCarouselPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function hookPublicHead($args)
     {
-        /**queue_css_file('jcarousel.connected-carousels');
-        queue_css_file('carousel');
-        queue_js_file('jcarousel.responsive');
-        queue_js_file('jquery.jcarousel.min');
-		**/
 		queue_css_file('slick');
 		queue_js_file('slick');
 		queue_css_file('jquery.fancybox');
 		queue_css_file('jquery.fancybox-buttons');
-		queue_js_file('jquery.fancybox');?>
-		<script type="text/javascript">
-			jQuery(document).ready(function(){
-
-				jQuery("a.iframe").fancybox({
-			             'type': 'iframe'
-				});
-				});
-		</script>
-	<?php	
+		queue_js_file('jquery.fancybox');
     }
 
     public function hookExhibitBuilderPageHead($args)
